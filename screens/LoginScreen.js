@@ -17,7 +17,7 @@ export default class LoginScreen extends Component{
     }
 
     obtenerUsuario(){
-        fetch('https://con2doc.live/authentication/register/', {
+        fetch('https://con2doc.live/authentication/token/', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -30,11 +30,11 @@ export default class LoginScreen extends Component{
         })
         .then((response)=> response.json())
         .then((responseData) => {
-            this.saveToken(responseData.token);
-            this.props.navigation.navigate('Bienvenido Doctor', {email: this.state.email})
             console.log(
                 "POST Response", "Response Body -> "+ JSON.stringify(responseData)
             )
+            console.log(responseData[1].name)
+            this.props.navigation.navigate('Bienvenido Usuario', {name : responseData[1].name})
         })
         .catch(error => {
             this.setState({error, loading: false})

@@ -3,6 +3,7 @@ import {View, Text, Button, Image, TextInput} from 'react-native';
 import {Estilos} from '../styles/Estilos';
 import RNPickerSelect from 'react-native-picker-select';
 import DatePicker from 'react-native-datepicker';
+import AsyncStorage from '@react-native-community/async-storage';
 
 export default class RegisterScreen_User extends Component{
     constructor(props){
@@ -27,22 +28,11 @@ export default class RegisterScreen_User extends Component{
     }
 
     siguiente(){
-        if(this.props.route.params.userType === 'Doctor'){
-            this.props.navigation.navigate('Datos Adicionales', {
-                email: this.props.route.params.email,
-                password: this.props.route.params.password,
-                userType: this.props.route.params.userType,
-                name: this.state.name,
-                first_name: this.state.first_name,
-                last_name: this.state.last_name,
-                gender: this.state.gender,
-                phone: this.state.phone,
-                birthday: this.state.birthday,
-            })
-        }
-        else{
-            registrarUsuario();
-        }
+        this.registrarUsuario();
+    }
+
+    saveToken = async (token) => {
+        await AsyncStorage.setItem('token', token);
     }
 
     registrarUsuario(){
@@ -55,26 +45,33 @@ export default class RegisterScreen_User extends Component{
             body: JSON.stringify({
                 email: this.props.route.params.email,
                 password: this.props.route.params.password,
-                userType: this.props.route.params.userType,
                 name: this.state.name,
                 first_name: this.state.first_name,
                 last_name: this.state.last_name,
-                gender: this.state.gender,
-                phone: this.state.phone,
                 birthday: this.state.birthday,
+                phone: this.state.phone,
+                gender: this.state.gender,
+                client_Type: this.clientType(this.props.route.params.userType),
             })
         })
         .then((response)=> response.json())
         .then((responseData) => {
-            this.saveToken(responseData.token);
-            this.props.navigation.navigate('Bienvenido Doctor', {email: this.state.email})
             console.log(
                 "POST Response", "Response Body -> "+ JSON.stringify(responseData)
             )
+            this.saveToken(responseData.token);
+            this.props.navigation.navigate('Bienvenido Usuario')
         })
         .catch(error => {
-            this.setState({error, loading: false})
+            console.log(error);
         });
+    }
+
+    clientType(tipo){
+        if(tipo === 'Doctor')
+            return 1;
+        else
+            return 0;
     }
 
     render(){
@@ -92,8 +89,8 @@ export default class RegisterScreen_User extends Component{
                 <RNPickerSelect
                     onValueChange={(value) => this.setState({gender: value})}
                     items={[
-                        { label: 'Masculino', value: 'Male' },
-                        { label: 'Femenino', value: 'Female' },]}
+                        { label: 'Masculino', value: 0 },
+                        { label: 'Femenino', value: 1 },]}
                 />
                 <Text>Fecha de Nacimiento</Text>
                 <View>
@@ -121,7 +118,7 @@ export default class RegisterScreen_User extends Component{
                 />
                 </View>
                 <TextInput placeholder="Teléfono" onChangeText={(phone) => this.setState({phone})} keyboardType={'phone-pad'} />
-                <Button onPress={() => siguiente()} title="Siguiente"/>
+                <Button onPress={() => this.siguiente()} title="Siguiente"/>
             </View>
         );
     }
